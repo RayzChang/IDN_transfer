@@ -1,5 +1,6 @@
 /**
  * Webhook 邏輯：供 Express 與 Vercel serverless 共用
+ * 外勞傳任何語言 → 翻成繁中；你傳繁中 → 印尼文 + 回譯繁中
  */
 export async function getReplyText(translate, input) {
   const lang = await translate.detectLanguage(input);
@@ -11,7 +12,7 @@ export async function getReplyText(translate, input) {
     return `🇮🇩 印尼文：\n${idText}\n\n✅ 回譯確認（繁中）：\n${backToChinese}`;
   }
 
-  const zhText = await translate.translate(input, 'id', 'zh-TW');
+  const zhText = await translate.translate(input, lang, 'zh-TW');
   return `🇹🇼 繁體中文：\n${zhText}`;
 }
 

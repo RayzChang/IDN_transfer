@@ -3,10 +3,13 @@
  * 印尼文 id ↔ 繁體中文 zh-TW；語系用簡易規則偵測
  */
 
-// 含 CJK 字元視為中文
+// 語系偵測：繁中 / 印尼文 / 英文 / 其他（全部非中文都會翻成繁中）
 function detectLanguage(text) {
   if (!text || !text.trim()) return 'id';
-  return /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/.test(text) ? 'zh-TW' : 'id';
+  if (/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/.test(text)) return 'zh-TW';
+  const noLatin = text.replace(/[\s\d.,!?'"-]/g, '').replace(/[a-zA-Z]/g, '');
+  if (noLatin.length === 0 && text.replace(/\s/g, '').length > 0) return 'en';
+  return 'id';
 }
 
 // ---------- MyMemory（免費，免金鑰；匿名約 5000 字/天）----------
@@ -23,7 +26,8 @@ async function translateMyMemory(text, source, target) {
   return translated;
 }
 
-// ---------- Gemini（需 GEMINI_API_KEY，翻譯較準；免費額度約 15 次/分、1500 次/日）----------
+// ---------- Gemini（需 GEMINI_API_KEY；預設 gemini-2.0-flash，可用 GEMINI_MODEL 覆寫）----------
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 let geminiClient = null;
 
 async function getGeminiClient() {
@@ -39,7 +43,7 @@ async function getGeminiClient() {
   }
 }
 
-const SOURCE_NAMES = { 'id': '印尼文', 'zh-TW': '繁體中文' };
+const SOURCE_NAMES = { 'id': '印尼文', 'zh-TW': '繁體中文', 'en': '英文' };
 
 async function translateGemini(text, source, target) {
   const ai = await getGeminiClient();
@@ -48,7 +52,7 @@ async function translateGemini(text, source, target) {
   const to = SOURCE_NAMES[target] || target;
   const prompt = `你只負責翻譯。把下面這段「${from}」翻譯成「${to}」。只輸出翻譯結果，不要解釋、不要加標題。\n\n${text}`;
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model: GEMINI_MODEL,
     contents: prompt,
   });
   const out = response?.text?.trim();
