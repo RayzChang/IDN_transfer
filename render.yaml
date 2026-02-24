@@ -1,0 +1,17 @@
+# Render 一鍵部署：將此專案推上 GitHub 後，在 Render 選 New → Blueprint，連此 repo 即可
+services:
+  - type: web
+    name: indonesian-translation-line-bot
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: LINE_CHANNEL_SECRET
+        sync: false
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+        optional: true
+      - key: NODE_VERSION
+        value: 20

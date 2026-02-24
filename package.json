@@ -1,0 +1,20 @@
+{
+  "name": "indonesian-translation-line-bot",
+  "version": "1.0.0",
+  "description": "LINE 群組機器人：印尼文↔繁體中文翻譯，外勞傳印尼文回繁中，使用者傳繁中回印尼文並同步回譯確認",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^9.0.0",
+    "@google/genai": "^1.0.0",
+    "express": "^4.21.0",
+    "dotenv": "^16.4.5"
+  }
+}
