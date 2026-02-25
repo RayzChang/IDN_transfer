@@ -19,10 +19,18 @@ async function translateMyMemory(text, source, target) {
   const pair = `${source}|${target}`;
   const url = `${MYMEMORY_BASE}?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(pair)}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`翻譯失敗: ${res.status}`);
-  const data = await res.json();
+  const body = await res.text();
+  if (!res.ok) {
+    throw new Error(`MyMemory ${res.status}: ${body.slice(0, 200)}`);
+  }
+  let data;
+  try {
+    data = JSON.parse(body);
+  } catch {
+    throw new Error(`MyMemory 回應非 JSON: ${body.slice(0, 100)}`);
+  }
   const translated = data?.responseData?.translatedText;
-  if (translated == null) throw new Error('翻譯回應格式錯誤');
+  if (translated == null) throw new Error('MyMemory 回應格式錯誤');
   return translated;
 }
 
@@ -51,19 +59,33 @@ async function translateGemini(text, source, target) {
   const from = SOURCE_NAMES[source] || source;
   const to = SOURCE_NAMES[target] || target;
   const prompt = `你只負責翻譯。把下面這段「${from}」翻譯成「${to}」。只輸出翻譯結果，不要解釋、不要加標題。\n\n${text}`;
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: prompt,
-  });
+  let response;
+  try {
+    response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+    });
+  } catch (e) {
+    const msg = e?.message || String(e);
+    throw new Error(`Gemini 請求失敗: ${msg}`);
+  }
   const out = response?.text?.trim();
-  if (!out) throw new Error('Gemini 未回傳譯文');
+  if (!out) {
+    const raw = JSON.stringify(response?.candidates || response).slice(0, 150);
+    throw new Error(`Gemini 未回傳譯文: ${raw}`);
+  }
   return out;
 }
 
-// ---------- 統一介面 ----------
+// ---------- 統一介面：有 Gemini 時優先，失敗則 fallback MyMemory ----------
 async function translateText(text, source, target) {
   if (process.env.GEMINI_API_KEY) {
-    return translateGemini(text, source, target);
+    try {
+      return await translateGemini(text, source, target);
+    } catch (geminiErr) {
+      console.warn('[Gemini 失敗，改用 MyMemory]', geminiErr?.message);
+      return translateMyMemory(text, source, target);
+    }
   }
   return translateMyMemory(text, source, target);
 }

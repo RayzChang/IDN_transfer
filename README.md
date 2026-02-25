@@ -121,6 +121,15 @@ npm start
 
 ---
 
+## 🔧 翻譯失敗時怎麼查原因
+
+若出現「翻譯暫時無法使用，請稍後再試」：
+
+1. **Vercel**：專案 → **Deployments** → 點最新部署 → **Functions** → 選 `api/callback` → 看 **Logs**。會看到 `[翻譯失敗]` 與 `message`、`inputPreview`，可判斷是 **Gemini 額度/錯誤** 還是 **MyMemory 額度/錯誤**。
+2. **常見原因**：Gemini 超過 15 次/分或 1500 次/日、MyMemory 超過每日字數、網路逾時。程式已設定：Gemini 失敗時會自動改試 MyMemory，多數情況仍會翻出結果。
+
+---
+
 ## 📄 授權
 
 MIT

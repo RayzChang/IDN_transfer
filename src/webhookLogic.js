@@ -32,7 +32,12 @@ export async function handleEvent(client, translate, event) {
       messages: [{ type: 'text', text: reply }],
     });
   } catch (err) {
-    console.error('翻譯或回覆失敗:', err);
+    const preview = text.length > 30 ? text.slice(0, 30) + '…' : text;
+    console.error('[翻譯失敗]', {
+      message: err?.message,
+      name: err?.name,
+      inputPreview: preview,
+    });
     const fallback = '翻譯暫時無法使用，請稍後再試。';
     await client.replyMessage({
       replyToken: event.replyToken,
